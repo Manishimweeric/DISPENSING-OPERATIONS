@@ -17,7 +17,7 @@ class User(models.Model):
     role = models.CharField(max_length=30, blank=True, null=True,default="user")
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128)
-    status = models.CharField(max_length=50)
+    is_active= models.BooleanField(default=True)
     def __str__(self):
         return self.name
 

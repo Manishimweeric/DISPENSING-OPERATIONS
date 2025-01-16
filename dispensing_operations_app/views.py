@@ -9,8 +9,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.exceptions import AuthenticationFailed
+from django.contrib.auth.hashers import make_password
+from rest_framework_simplejwt.tokens import AccessToken
 
-# Station Views
 class StationListCreateView(generics.ListCreateAPIView):
     queryset = Station.objects.all()
     serializer_class = StationSerializer
@@ -21,30 +22,35 @@ class UserListCreateView(generics.ListCreateAPIView):
     serializer_class = UserSerializer
 
     def perform_create(self, serializer):
+
         email = serializer.validated_data.get('email')
+        
         if User.objects.filter(email=email).exists():
             raise ValidationError("Email already exists.")
-        serializer.save()
+        password = serializer.validated_data.get('password')
+        hashed_password = make_password(password)
+
+        user = serializer.save(password=hashed_password)  
+        user.save()
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
-        email = request.data.get('email')
-        password = request.data.get('password')
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
+            user_serializer = UserSerializer(user)
+            access_token = AccessToken.for_user(user)
 
-        if not email or not password:
-            raise AuthenticationFailed('Email and password are required.')
-        user = authenticate(request, email=email, password=password)
-
-        if user is None:
-            raise AuthenticationFailed('Invalid email or password.')
-        access_token = AccessToken.for_user(user)
-
-        return Response({
-            'access': str(access_token),
-        }, status=status.HTTP_200_OK)
-
+            return Response({
+                "message": "Login successful",
+                "user": user_serializer.data,
+                "access_token": str(access_token),  # Return the access token
+            }, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 class CustomerListCreateView(generics.ListCreateAPIView):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
