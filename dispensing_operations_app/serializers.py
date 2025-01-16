@@ -34,16 +34,17 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = '__all__'
 
+class OilTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OilType
+        fields = '__all__'       
+
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = '__all__'
 
-class OilTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OilType
-        fields = '__all__'
-
+        
 class StockSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stock
