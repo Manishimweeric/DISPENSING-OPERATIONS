@@ -22,9 +22,8 @@ class UserListCreateView(generics.ListCreateAPIView):
     serializer_class = UserSerializer
 
     def perform_create(self, serializer):
-
-        email = serializer.validated_data.get('email')
         
+        email = serializer.validated_data.get('email')
         if User.objects.filter(email=email).exists():
             raise ValidationError("Email already exists.")
         password = serializer.validated_data.get('password')
