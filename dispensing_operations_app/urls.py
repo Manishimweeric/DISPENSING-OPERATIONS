@@ -10,4 +10,6 @@ urlpatterns = [
     path('stocks/', StockListCreateView.as_view(), name='stock-list-create'),
     path('maintenance/', MaintenanceListCreateView.as_view(), name='maintenance-list-create'),
     path('orders/', OrderListCreateView.as_view(), name='order-list-create'),
+
+    
 ]
