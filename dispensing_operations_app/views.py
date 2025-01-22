@@ -11,6 +11,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.exceptions import NotFound
 
 class StationListCreateView(generics.ListCreateAPIView):
     queryset = Station.objects.all()
@@ -51,8 +52,26 @@ class LoginView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class CustomerListCreateView(generics.ListCreateAPIView):
-    queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
+    def get_queryset(self):
+        """
+        Filters the queryset based on the user_id query parameter if provided.
+        If no user_id is provided, it returns all customers.
+        """
+        user_id = self.request.query_params.get('user_id', None)
+
+        # If a user_id is provided, filter the queryset by user_id
+        if user_id:
+            queryset = Customer.objects.filter(user_id=user_id)
+            
+            # If no customers are found for that user_id, raise a NotFound exception
+            if not queryset.exists():
+                raise NotFound(f"No customers found for user ID {user_id}")
+            
+            return queryset
+
+        # If no user_id is provided, return all customers
+        return Customer.objects.all()
 
 # OilType Views
 class OilTypeListCreateView(generics.ListCreateAPIView):

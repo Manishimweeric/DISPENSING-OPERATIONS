@@ -23,13 +23,11 @@ class User(models.Model):
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128)
     is_active = models.BooleanField(default=True)
-    station  = models.ForeignKey('Station', on_delete=models.CASCADE)
+    station  = models.ForeignKey('Station', on_delete=models.CASCADE,null=True)
     created_at = models.CharField(max_length=20, default=get_default_datetime)
 
     def __str__(self):
         return self.name
-
-# Customer Model
 class Customer(models.Model):
     name = models.CharField(max_length=150)
     quantity = models.IntegerField()
