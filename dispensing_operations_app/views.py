@@ -12,12 +12,16 @@ from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.exceptions import NotFound
+<<<<<<< HEAD
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Count, Sum
 from django.utils import timezone
 from datetime import timedelta
+=======
+from django.db.models import Sum
+>>>>>>> 0d47ed615e2d7243eafbabb3fe517c5e73c77309
 
 class StationListCreateView(generics.ListCreateAPIView):
     queryset = Station.objects.all()
@@ -117,6 +121,7 @@ def get_dashboard_stats(request):
     }
     return Response(stats)
 
+<<<<<<< HEAD
 @api_view(['GET'])
 def get_sales_trends(request):
     thirty_days_ago = timezone.now() - timedelta(days=30)
@@ -125,3 +130,28 @@ def get_sales_trends(request):
         is_active=True
     ).extra(select={'date': 'DATE(created_at)'}).values('date').annotate(total_quantity=Sum('quantity')).order_by('date')
     return Response(list(daily_sales))
+=======
+class MonthlyDataView(APIView):
+    def get(self, request):
+        # Aggregate monthly data for customers
+        customers = Customer.objects.values('created_at__month').annotate(
+            total_quantity=Sum('quantity')
+        )
+
+        # Aggregate monthly data for stock
+        stocks = Stock.objects.values('created_at__month').annotate(
+            total_stock=Sum('quantity')
+        )
+
+        # Combine customer and stock data
+        combined_data = []
+        months = set([c['created_at__month'] for c in customers] + [s['created_at__month'] for s in stocks])
+        for month in months:
+            combined_data.append({
+                'month': month,
+                'Customers': next((c['total_quantity'] for c in customers if c['created_at__month'] == month), 0),
+                'Inventory': next((s['total_stock'] for s in stocks if s['created_at__month'] == month), 0),
+            })
+
+        return Response(combined_data, status=status.HTTP_200_OK)
+>>>>>>> 0d47ed615e2d7243eafbabb3fe517c5e73c77309
