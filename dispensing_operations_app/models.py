@@ -65,7 +65,7 @@ class Stock(models.Model):
 class Maintenance(models.Model):
     description = models.TextField()
     maintainer = models.CharField(max_length=150)
-    created_at = models.CharField(max_length=20, default=get_default_datetime)  # Default value
+    created_at = models.CharField(max_length=20, default=get_default_datetime) 
     status = models.CharField(max_length=50, default="active")
     station = models.ForeignKey('Station', on_delete=models.CASCADE)
 
@@ -75,7 +75,7 @@ class Maintenance(models.Model):
 # Order Model
 class Order(models.Model):
     name = models.CharField(max_length=150)
-    created_at = models.CharField(max_length=20, default=get_default_datetime)  # Default value
+    created_at = models.CharField(max_length=20, default=get_default_datetime)  
     status = models.CharField(max_length=50, default="active")
     oil_type = models.ForeignKey('OilType', on_delete=models.CASCADE)
     station = models.ForeignKey('Station', on_delete=models.CASCADE)

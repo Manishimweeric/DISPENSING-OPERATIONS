@@ -12,6 +12,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.exceptions import NotFound
+from django.db.models import Sum
 
 class StationListCreateView(generics.ListCreateAPIView):
     queryset = Station.objects.all()
@@ -93,3 +94,26 @@ class OrderListCreateView(generics.ListCreateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
 
+class MonthlyDataView(APIView):
+    def get(self, request):
+        # Aggregate monthly data for customers
+        customers = Customer.objects.values('created_at__month').annotate(
+            total_quantity=Sum('quantity')
+        )
+
+        # Aggregate monthly data for stock
+        stocks = Stock.objects.values('created_at__month').annotate(
+            total_stock=Sum('quantity')
+        )
+
+        # Combine customer and stock data
+        combined_data = []
+        months = set([c['created_at__month'] for c in customers] + [s['created_at__month'] for s in stocks])
+        for month in months:
+            combined_data.append({
+                'month': month,
+                'Customers': next((c['total_quantity'] for c in customers if c['created_at__month'] == month), 0),
+                'Inventory': next((s['total_stock'] for s in stocks if s['created_at__month'] == month), 0),
+            })
+
+        return Response(combined_data, status=status.HTTP_200_OK)
