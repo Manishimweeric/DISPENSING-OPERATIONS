@@ -59,3 +59,21 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = '__all__'
+
+class CalibrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Calibration
+        fields = '__all__'
+
+class CustomerDetailSerializer(serializers.ModelSerializer):
+    file_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomerDetail
+        fields = '__all__'
+
+    def get_file_url(self, obj):
+        request = self.context.get('request')
+        if obj.file and request:
+            return request.build_absolute_uri(obj.file.url)
+        return None

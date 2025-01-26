@@ -87,7 +87,7 @@ AUTHENTICATION_BACKENDS = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'md_db.sqlite3',
+        'NAME': BASE_DIR / 'db_D.sqlite3',
     }
 }
 SIMPLE_JWT = {
@@ -153,3 +153,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Replace with your frontend URL
 ]
+
+import os
+
+MEDIA_URL = '/media/'  # Base URL for media files
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Directory to save media file

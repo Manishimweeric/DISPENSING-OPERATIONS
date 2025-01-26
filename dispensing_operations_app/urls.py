@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import path
 from .views import *
 from . import views
@@ -11,13 +13,20 @@ urlpatterns = [
     path('stocks/', StockListCreateView.as_view(), name='stock-list-create'),
     path('maintenance/', MaintenanceListCreateView.as_view(), name='maintenance-list-create'),
     path('orders/', OrderListCreateView.as_view(), name='order-list-create'),
-<<<<<<< HEAD
     path('dashboard/stats/', views.get_dashboard_stats, name='get_dashboard_stats'),
     path('dashboard/sales-trends/', views.get_sales_trends, name='get_sales_trends'),
-    
-=======
-    path('monthly-data/', MonthlyDataView.as_view(), name='monthly-data'),
->>>>>>> 0d47ed615e2d7243eafbabb3fe517c5e73c77309
-]
+    path('calibrations/', CalibrationView.as_view(), name='calibration-list-create'),
+    path('calibrations/<int:pk>/', CalibrationView.as_view(), name='calibration-detail'),
+    path('maintenance/<int:pk>/', MaintenanceListCreateView.as_view(), name='maintenance-detail'),
 
+
+
+
+    path('customer-details/', CustomerDetailListCreateView.as_view(), name='customer-detail-list-create'),
+    # path('customer-details/<int:pk>/', CustomerDetailRetrieveUpdateView.as_view(), name='customer-detail-retrieve-update'),
+
+
+]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     

@@ -12,16 +12,15 @@ from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.exceptions import NotFound
-<<<<<<< HEAD
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Count, Sum
 from django.utils import timezone
 from datetime import timedelta
-=======
 from django.db.models import Sum
->>>>>>> 0d47ed615e2d7243eafbabb3fe517c5e73c77309
+from rest_framework.parsers import MultiPartParser, FormParser
+from django.shortcuts import get_object_or_404
 
 class StationListCreateView(generics.ListCreateAPIView):
     queryset = Station.objects.all()
@@ -62,7 +61,13 @@ class LoginView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class CustomerListCreateView(generics.ListCreateAPIView):
+    """
+    Handles both listing and creating customers.
+    GET: Returns all customers or filters by user_id if provided.
+    POST: Creates a new customer associated with the logged-in user.
+    """
     serializer_class = CustomerSerializer
+
     def get_queryset(self):
         """
         Filters the queryset based on the user_id query parameter if provided.
@@ -70,19 +75,19 @@ class CustomerListCreateView(generics.ListCreateAPIView):
         """
         user_id = self.request.query_params.get('user_id', None)
 
-        # If a user_id is provided, filter the queryset by user_id
         if user_id:
             queryset = Customer.objects.filter(user_id=user_id)
-            
-            # If no customers are found for that user_id, raise a NotFound exception
             if not queryset.exists():
                 raise NotFound(f"No customers found for user ID {user_id}")
-            
             return queryset
 
-        # If no user_id is provided, return all customers
         return Customer.objects.all()
 
+    def perform_create(self, serializer):
+        """
+        Automatically associates the created customer with the logged-in user.
+        """
+        serializer.save()
 # OilType Views
 class OilTypeListCreateView(generics.ListCreateAPIView):
     queryset = OilType.objects.all()
@@ -97,6 +102,28 @@ class StockListCreateView(generics.ListCreateAPIView):
 class MaintenanceListCreateView(generics.ListCreateAPIView):
     queryset = Maintenance.objects.all()
     serializer_class = MaintenanceSerializer
+
+    def get_queryset(self):
+        station_id = self.request.query_params.get('station_id', None)
+        if station_id:
+            return Maintenance.objects.filter(station_id=station_id)
+        return Maintenance.objects.all()
+    def post(self, serializer):
+        calibration_id = self.request.data.get('Calibration')
+        if Maintenance.objects.filter(Calibration=calibration_id).exists():
+            return Response({
+                'error': 'A maintenance record with this calibration already Schedured.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+
+    def put(self, request, *args, **kwargs):
+        maintenance_id = kwargs.get('pk')
+        maintenance = get_object_or_404(Maintenance, pk=maintenance_id)
+        serializer = self.serializer_class(maintenance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    
 
 # Order Views
 class OrderListCreateView(generics.ListCreateAPIView):
@@ -121,7 +148,7 @@ def get_dashboard_stats(request):
     }
     return Response(stats)
 
-<<<<<<< HEAD
+
 @api_view(['GET'])
 def get_sales_trends(request):
     thirty_days_ago = timezone.now() - timedelta(days=30)
@@ -130,7 +157,7 @@ def get_sales_trends(request):
         is_active=True
     ).extra(select={'date': 'DATE(created_at)'}).values('date').annotate(total_quantity=Sum('quantity')).order_by('date')
     return Response(list(daily_sales))
-=======
+
 class MonthlyDataView(APIView):
     def get(self, request):
         # Aggregate monthly data for customers
@@ -154,4 +181,45 @@ class MonthlyDataView(APIView):
             })
 
         return Response(combined_data, status=status.HTTP_200_OK)
->>>>>>> 0d47ed615e2d7243eafbabb3fe517c5e73c77309
+
+
+class CalibrationView(APIView):
+    def get(self, request):
+        station_id = request.query_params.get("station_id", None)
+        if station_id:
+            calibrations = Calibration.objects.filter(station_id=station_id)
+            serializer = CalibrationSerializer(calibrations, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        calibrations = Calibration.objects.all()
+        serializer = CalibrationSerializer(calibrations, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = CalibrationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, pk=None):
+        """ 
+        Updates a specific calibration record.
+        """
+        calibration = get_object_or_404(Calibration, pk=pk)
+        serializer = CalibrationSerializer(calibration, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class CustomerDetailListCreateView(generics.ListCreateAPIView):
+    queryset = CustomerDetail.objects.all()
+    serializer_class = CustomerDetailSerializer
+    parser_classes = [MultiPartParser, FormParser]  # Allow file uploads
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    

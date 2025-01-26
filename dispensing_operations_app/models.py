@@ -30,16 +30,34 @@ class User(models.Model):
         return self.name
 class Customer(models.Model):
     name = models.CharField(max_length=150)
-    quantity = models.IntegerField()
-    plate_number = models.CharField(max_length=50)
-    created_at = models.CharField(max_length=20, default=get_default_datetime)  # Default value
-    Method = models.CharField(max_length=50)
+    Phonenumber = models.CharField(max_length=150)
+    location = models.CharField(max_length=150)
+    quantity = models.IntegerField(null=True)
+    created_at = models.CharField(max_length=20, default=get_default_datetime) 
     is_active = models.BooleanField(default=True)
-    oil_type = models.ForeignKey('OilType', on_delete=models.CASCADE)
     user = models.ForeignKey('User', on_delete=models.CASCADE)
+    status = models.CharField(max_length=50, default="1")
 
     def __str__(self):
         return self.name
+    
+class CustomerDetail(models.Model):
+    Customer = models.ForeignKey('Customer', on_delete=models.CASCADE)
+    quantity = models.IntegerField(null=True)
+    plate_number = models.CharField(max_length=50, null=True)
+    created_at = models.CharField(max_length=20, default=get_default_datetime)  # Default value
+    Method = models.CharField(max_length=50, null=True)
+    file = models.FileField(upload_to='uploads/', null=True, blank=True)
+    oil_type = models.ForeignKey('OilType', on_delete=models.CASCADE)
+    status = models.CharField(max_length=50, default="1")
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.Customer} - {self.plate_number}"
+
+
+    def __str__(self):
+        return self.name    
 
 # OilType Model
 class OilType(models.Model):
@@ -63,11 +81,14 @@ class Stock(models.Model):
 
 # Maintenance Model
 class Maintenance(models.Model):
-    description = models.TextField()
+    report=models.CharField(max_length=255,null=True, blank=True)
     maintainer = models.CharField(max_length=150)
+    Date= models.DateField()
+    Time=models.TimeField(blank=True, null=True,max_length=30)    
     created_at = models.CharField(max_length=20, default=get_default_datetime) 
     status = models.CharField(max_length=50, default="active")
     station = models.ForeignKey('Station', on_delete=models.CASCADE)
+    Calibration = models.ForeignKey('Calibration', on_delete=models.CASCADE)
 
     def __str__(self):
         return f"Maintenance by {self.maintainer}"
@@ -79,6 +100,17 @@ class Order(models.Model):
     status = models.CharField(max_length=50, default="active")
     oil_type = models.ForeignKey('OilType', on_delete=models.CASCADE)
     station = models.ForeignKey('Station', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+class Calibration(models.Model):
+    station = models.ForeignKey('Station', on_delete=models.CASCADE)
+    Date  = models.DateField(max_length=200)
+    Time=models.TimeField(blank=True, null=True,max_length=30)
+    report=models.CharField(max_length=255,null=True, blank=True)
+    status = models.CharField(max_length=50,default="Active")
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
