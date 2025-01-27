@@ -18,11 +18,16 @@ urlpatterns = [
     path('calibrations/', CalibrationView.as_view(), name='calibration-list-create'),
     path('calibrations/<int:pk>/', CalibrationView.as_view(), name='calibration-detail'),
     path('maintenance/<int:pk>/', MaintenanceListCreateView.as_view(), name='maintenance-detail'),
+    path('customers/<int:pk>/', CustomerDetailView.as_view(), name='customer-detail'),
+    path('customersdata/<int:pk>/', CustomerListCreateView.as_view(), name='customer-update'),
+
+
 
 
 
 
     path('customer-details/', CustomerDetailListCreateView.as_view(), name='customer-detail-list-create'),
+    path('customer-details/', CustomerDetailListCreateView.as_view(), name='customer-detail-list-by_customer'),
     # path('customer-details/<int:pk>/', CustomerDetailRetrieveUpdateView.as_view(), name='customer-detail-retrieve-update'),
 
 

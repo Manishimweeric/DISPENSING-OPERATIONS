@@ -88,6 +88,23 @@ class CustomerListCreateView(generics.ListCreateAPIView):
         Automatically associates the created customer with the logged-in user.
         """
         serializer.save()
+
+    def put(self, request, pk=None):
+        """
+        Updates a specific customer record.
+        """
+       
+
+        customer = get_object_or_404(Customer, pk=pk)
+        serializer = CustomerSerializer(customer, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    
+
+        
 # OilType Views
 class OilTypeListCreateView(generics.ListCreateAPIView):
     queryset = OilType.objects.all()
@@ -211,7 +228,25 @@ class CalibrationView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+class CustomerDetailView(generics.RetrieveAPIView):
+    """
+    Handles retrieving a customer by their ID.
+    GET: Returns the customer associated with the given ID.
+    """
+    queryset = Customer.objects.all()
+    serializer_class = CustomerSerializer
 
+    def get_object(self):
+        """
+        Overrides get_object to handle custom logic for retrieving a customer by ID.
+        """
+        customer_id = self.kwargs.get("pk")
+        try:
+            customer = Customer.objects.get(pk=customer_id)
+            return customer
+        except Customer.DoesNotExist:
+            raise NotFound(f"Customer with ID {customer_id} not found")
+        
 class CustomerDetailListCreateView(generics.ListCreateAPIView):
     queryset = CustomerDetail.objects.all()
     serializer_class = CustomerDetailSerializer
@@ -223,3 +258,10 @@ class CustomerDetailListCreateView(generics.ListCreateAPIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    
+    
+    def get_queryset(self):
+        queryset = CustomerDetail.objects.all()
+        customer_id = self.request.query_params.get('customer_id', None)  # Get customer_id from query parameters
+        if customer_id is not None:
+            queryset = queryset.filter(Customer=customer_id)  # Filter by customer_id
+        return queryset

@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import datetime
+import random
 
 # Function to get the current date and time as a string
 def get_default_datetime():
@@ -11,7 +12,6 @@ class Station(models.Model):
     location = models.CharField(max_length=255)
     created_at = models.CharField(max_length=20, default=get_default_datetime)  # Default value
     status = models.CharField(max_length=50, default="active")
-
     def __str__(self):
         return self.name
 
@@ -28,7 +28,20 @@ class User(models.Model):
 
     def __str__(self):
         return self.name
+
+
+def generate_random_id():
+    # Generate a random 5-digit ID
+    return str(random.randint(10000, 99999))
+
 class Customer(models.Model):
+    id = models.CharField(
+        max_length=5,
+        primary_key=True,
+        default=generate_random_id,
+        editable=False,  # Prevent users from editing this field
+        unique=True
+    )
     name = models.CharField(max_length=150)
     Phonenumber = models.CharField(max_length=150)
     location = models.CharField(max_length=150)
