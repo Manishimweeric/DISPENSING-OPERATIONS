@@ -20,6 +20,8 @@ urlpatterns = [
     path('maintenance/<int:pk>/', MaintenanceListCreateView.as_view(), name='maintenance-detail'),
     path('customers/<int:pk>/', CustomerDetailView.as_view(), name='customer-detail'),
     path('customersdata/<int:pk>/', CustomerListCreateView.as_view(), name='customer-update'),
+    path('Stocks/<int:pk>/', StockListCreateView.as_view(), name='Stocks-update'),
+
 
 
 

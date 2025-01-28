@@ -86,7 +86,7 @@ class Stock(models.Model):
     quantity = models.IntegerField()
     price_per_litre = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.CharField(max_length=20, default=get_default_datetime)  # Default value
-    status = models.CharField(max_length=50, default="active")
+    status = models.CharField(max_length=50, default="In Stock")
     oil_type = models.ForeignKey('OilType', on_delete=models.CASCADE)
 
     def __str__(self):

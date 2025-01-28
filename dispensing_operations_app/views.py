@@ -115,6 +115,17 @@ class StockListCreateView(generics.ListCreateAPIView):
     queryset = Stock.objects.all()
     serializer_class = StockSerializer
 
+    def put(self, request, pk=None):
+        """ 
+        Updates a specific Stock record.
+        """
+        stock = get_object_or_404(Stock, pk=pk)
+        serializer = StockSerializer(stock, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 # Maintenance Views
 class MaintenanceListCreateView(generics.ListCreateAPIView):
     queryset = Maintenance.objects.all()
