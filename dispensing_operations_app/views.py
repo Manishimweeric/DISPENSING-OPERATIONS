@@ -20,7 +20,13 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Sum
 from rest_framework.parsers import MultiPartParser, FormParser
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404    
+import json
+from django.core.mail import send_mail
+from django.http import JsonResponse
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+
 
 class StationListCreateView(generics.ListCreateAPIView):
     queryset = Station.objects.all()
@@ -157,6 +163,13 @@ class MaintenanceListCreateView(generics.ListCreateAPIView):
 class OrderListCreateView(generics.ListCreateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
+
+class OrderUpdateView(generics.RetrieveUpdateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    lookup_field = 'id'  # Allows updating based on order ID
+
+
 @api_view(['GET'])
 def get_dashboard_stats(request):
     today = timezone.now()
@@ -164,15 +177,16 @@ def get_dashboard_stats(request):
     
     stats = {
         'total_customers': Customer.objects.filter(is_active=True).count(),
+        'total_user': User.objects.filter(is_active=True).count(),
         'total_stations': Station.objects.filter(status='active').count(),
         'total_users': User.objects.filter(is_active=True).count(),
         'total_oil_types': OilType.objects.filter(status='active').count(),
         'total_stock': Stock.objects.filter(status='active').aggregate(total=Sum('quantity'))['total'] or 0,
-        'sales_by_oil_type': list(Customer.objects.values('oil_type__name').annotate(total_sales=Sum('quantity')).order_by('-total_sales')),
+        'sales_by_oil_type': list(CustomerDetail.objects.values('oil_type__name').annotate(total_sales=Sum('quantity')).order_by('-total_sales')),
         'recent_maintenance': Maintenance.objects.filter(status='active').order_by('-created_at')[:5].values(),
         'orders_by_station': list(Order.objects.values('station__name').annotate(total_orders=Count('id')).order_by('-total_orders')),
         'stock_by_oil_type': list(Stock.objects.filter(status='active').values('oil_type__name', 'quantity')),
-        'recent_customers': list(Customer.objects.filter(is_active=True).order_by('-created_at')[:5].values('name', 'plate_number', 'quantity', 'oil_type__name')),
+        'recent_customers': list(Customer.objects.filter(is_active=True).order_by('-created_at')[:5].values('name', 'Phonenumber', 'quantity', 'email','location')),
     }
     return Response(stats)
 
@@ -276,3 +290,162 @@ class CustomerDetailListCreateView(generics.ListCreateAPIView):
         if customer_id is not None:
             queryset = queryset.filter(Customer=customer_id)  # Filter by customer_id
         return queryset
+
+
+@csrf_exempt 
+def send_email_view(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            recipient_email = data.get("email") 
+
+            if not recipient_email:
+                return JsonResponse({"error": "Recipient email is required"}, status=400)
+
+            subject = "From SOLSE OIL"
+            message = """
+            Hello Customer,
+
+            We at SOLSE OIL would like to inform you that you have reached the discount threshold. Congratulations!  
+
+            For more information, please call us at +25078987897.
+            """
+            from_email = settings.EMAIL_HOST_USER
+
+            send_mail(subject, message, from_email, [recipient_email])  # Send email
+
+            return JsonResponse({"message": f"Email sent to {recipient_email} successfully!"})
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+@csrf_exempt 
+def send_email_Password_view(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            recipient_email = data.get("email")
+            recipient_password = data.get("password") 
+
+            if not recipient_email:
+                return JsonResponse({"error": "Recipient email is required"}, status=400)
+
+            subject = "From SOLSE OIL"
+            message = f"""
+            Hello Customer,
+
+            Here is  your account From SOLSE OIL and your account will be automatically created with
+             
+            Password :  {recipient_password}
+            Email : {recipient_email}
+
+            For more information, please call us at +25078987897.
+            """
+            from_email = settings.EMAIL_HOST_USER
+
+            send_mail(subject, message, from_email, [recipient_email])  # Send email
+
+            return JsonResponse({"message": f"Email sent to {recipient_email} successfully!"})
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+# List and Create Customer Responses
+class CustomerResponseListCreateView(generics.ListCreateAPIView):
+    queryset = CustomerResponse.objects.all().order_by('-created_at')  # Order by newest first
+    serializer_class = CustomerResponseSerializer
+
+# Retrieve Customer Responses by Email
+class CustomerResponseByEmailView(generics.ListAPIView):
+    serializer_class = CustomerResponseSerializer
+
+    def get_queryset(self):
+        email = self.kwargs.get('email')
+        return CustomerResponse.objects.filter(email=email).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if not queryset.exists():
+            return Response({"message": "No responses found for this email."}, status=status.HTTP_404_NOT_FOUND)
+        return super().list(request, *args, **kwargs)
+    
+
+class SupportListCreateView(generics.ListCreateAPIView):
+    queryset = Support.objects.all().order_by('-created_at')  # Newest first
+    serializer_class = SupportSerializer
+ 
+
+
+
+@csrf_exempt 
+def send_email_Order_view(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            recipient_email = data.get("email") 
+
+            if not recipient_email:
+                return JsonResponse({"error": "Recipient email is required"}, status=400)
+
+            subject = "From SOLSE OIL"
+            message = """
+            Dear Customer,
+
+            We would like to inform you that your tank is currently low. An order has been placed with the administrator, and we kindly ask for your patience while we process it.
+
+            Should you require immediate assistance or if there are any delays, please don’t hesitate to contact us at +25078987897.
+
+            Thank you for your understanding.
+
+            Best regards,
+            Source Oil
+            """
+            from_email = settings.EMAIL_HOST_USER
+
+            send_mail(subject, message, from_email, [recipient_email])  # Send email
+
+            return JsonResponse({"message": f"Email sent to {recipient_email} successfully!"})
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+@csrf_exempt 
+def send_email_Order_Approved_view(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            recipient_email = data.get("email") 
+
+            if not recipient_email:
+                return JsonResponse({"error": "Recipient email is required"}, status=400)
+
+            subject = "From SOLSE OIL"
+            message = """
+            Dear Manager,
+
+            We are happy to inform you that the administration has approved your order. Your request is now in progress, and we are working diligently to ensure everything is processed smoothly.
+
+            We kindly ask for your patience as we complete the necessary steps. If you have any questions or if there is a delay, please don’t hesitate to contact us at +25078987897.
+
+            Thank you for choosing us, and we appreciate your understanding.
+
+            Best regards,
+            Source Oil
+            """
+            from_email = settings.EMAIL_HOST_USER
+
+            send_mail(subject, message, from_email, [recipient_email])  # Send email
+
+            return JsonResponse({"message": f"Email sent to {recipient_email} successfully!"})
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)

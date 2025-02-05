@@ -31,15 +31,13 @@ class User(models.Model):
 
 
 def generate_random_id():
-    # Generate a random 5-digit ID
     return str(random.randint(10000, 99999))
-
 class Customer(models.Model):
     id = models.CharField(
         max_length=5,
         primary_key=True,
         default=generate_random_id,
-        editable=False,  # Prevent users from editing this field
+        editable=False,
         unique=True
     )
     name = models.CharField(max_length=150)
@@ -50,6 +48,8 @@ class Customer(models.Model):
     is_active = models.BooleanField(default=True)
     user = models.ForeignKey('User', on_delete=models.CASCADE)
     status = models.CharField(max_length=50, default="1")
+    discount = models.CharField(max_length=50, null=True)
+    email = models.CharField(max_length=50 ,null=True)
 
     def __str__(self):
         return self.name
@@ -64,6 +64,7 @@ class CustomerDetail(models.Model):
     oil_type = models.ForeignKey('OilType', on_delete=models.CASCADE)
     status = models.CharField(max_length=50, default="1")
     user = models.ForeignKey('User', on_delete=models.CASCADE)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.Customer} - {self.plate_number}"
@@ -110,8 +111,9 @@ class Maintenance(models.Model):
 class Order(models.Model):
     name = models.CharField(max_length=150)
     created_at = models.CharField(max_length=20, default=get_default_datetime)  
-    status = models.CharField(max_length=50, default="active")
-    oil_type = models.ForeignKey('OilType', on_delete=models.CASCADE)
+    status = models.CharField(max_length=50, default="Pending")
+    oil_type = models.CharField(max_length=50)
+    email = models.CharField(max_length=50)
     station = models.ForeignKey('Station', on_delete=models.CASCADE)
 
     def __str__(self):
@@ -127,3 +129,24 @@ class Calibration(models.Model):
 
     def __str__(self):
         return self.name
+class CustomerResponse(models.Model):
+    email = models.CharField(max_length=255,null=True, blank=True)
+    message=models.CharField(max_length=255,null=True, blank=True)
+    status = models.CharField(max_length=50,default="Active")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.Customer} - {self.plate_number}"
+
+    def __str__(self):
+        return self.name 
+    
+
+class Support(models.Model):
+    name = models.CharField(max_length=255,null=True, blank=True)
+    Phone = models.CharField(max_length=255,null=True, blank=True)
+    email = models.CharField(max_length=255,null=True, blank=True)
+    message=models.CharField(max_length=255,null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return self.name 

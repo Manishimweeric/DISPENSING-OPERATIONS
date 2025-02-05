@@ -77,3 +77,14 @@ class CustomerDetailSerializer(serializers.ModelSerializer):
         if obj.file and request:
             return request.build_absolute_uri(obj.file.url)
         return None
+    
+class CustomerResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerResponse
+        fields = '__all__'  # Includes all fields
+
+
+class SupportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Support
+        fields = '__all__'  # Include all fields            
