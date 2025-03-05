@@ -20,12 +20,11 @@ class User(models.Model):
     name = models.CharField(max_length=150)
     phone_number = models.CharField(max_length=15)
     role = models.CharField(max_length=30, blank=True, null=True, default="user")
-    email = models.EmailField(unique=True)
+    email = models.EmailField(blank=True, null=True)
     password = models.CharField(max_length=128)
     is_active = models.BooleanField(default=True)
     station  = models.ForeignKey('Station', on_delete=models.CASCADE,null=True)
     created_at = models.CharField(max_length=20, default=get_default_datetime)
-
     def __str__(self):
         return self.name
 

@@ -142,13 +142,24 @@ class MaintenanceListCreateView(generics.ListCreateAPIView):
         if station_id:
             return Maintenance.objects.filter(station_id=station_id)
         return Maintenance.objects.all()
-    def post(self, serializer):
-        calibration_id = self.request.data.get('Calibration')
+
+    def post(self, request, *args, **kwargs):
+        calibration_id = request.data.get('Calibration')
+        
+        # Ensure that request.data exists and is valid
+        if not calibration_id:
+            return Response({'error': 'Calibration ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
         if Maintenance.objects.filter(Calibration=calibration_id).exists():
             return Response({
-                'error': 'A maintenance record with this calibration already Schedured.'
+                'error': 'A maintenance record with this calibration already scheduled.'
             }, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save()
+        
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, *args, **kwargs):
         maintenance_id = kwargs.get('pk')
@@ -157,7 +168,7 @@ class MaintenanceListCreateView(generics.ListCreateAPIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
 
 # Order Views
 class OrderListCreateView(generics.ListCreateAPIView):
