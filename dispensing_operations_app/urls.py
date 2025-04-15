@@ -10,9 +10,12 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('customers/', CustomerListCreateView.as_view(), name='customer-list-create'),
     path('oiltypes/', OilTypeListCreateView.as_view(), name='oiltype-list-create'),
+    path('oiltypes/<int:pk>/', OilTypeRetrieveUpdateView.as_view(), name='oiltype-detail'),
+
     path('stocks/', StockListCreateView.as_view(), name='stock-list-create'),
     path('maintenance/', MaintenanceListCreateView.as_view(), name='maintenance-list-create'),
     path('orders/', OrderListCreateView.as_view(), name='order-list-create'),
+    
     path('orders/<int:id>/', OrderUpdateView.as_view(), name='order-update'),
     path('dashboard/stats/', views.get_dashboard_stats, name='get_dashboard_stats'),
     path('dashboard/sales-trends/', views.get_sales_trends, name='get_sales_trends'),

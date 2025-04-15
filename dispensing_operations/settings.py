@@ -134,7 +134,7 @@ EMAIL_HOST = "smtp.gmail.com"  # Change if using a different provider
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "iradukundajatuja@gmail.com"  # Replace with your email
-EMAIL_HOST_PASSWORD = "dasx hxqz pkjp dkga"  # Use an App Password if using Gmail
+EMAIL_HOST_PASSWORD = "lqke qmbf daas sezt"  # Use an App Password if using Gmail
 
 
 

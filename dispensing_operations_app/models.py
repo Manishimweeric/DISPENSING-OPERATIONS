@@ -95,7 +95,7 @@ class Stock(models.Model):
 # Maintenance Model
 class Maintenance(models.Model):
     report=models.CharField(max_length=255,null=True, blank=True)
-    maintainer = models.CharField(max_length=150)
+    maintainer = models.CharField(max_length=150,null=True, blank=True)
     Date= models.DateField()
     Time=models.TimeField(blank=True, null=True,max_length=30)    
     created_at = models.CharField(max_length=20, default=get_default_datetime) 

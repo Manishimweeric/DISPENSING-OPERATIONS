@@ -116,7 +116,11 @@ class OilTypeListCreateView(generics.ListCreateAPIView):
     queryset = OilType.objects.all()
     serializer_class = OilTypeSerializer
 
-# Stock Views
+class OilTypeRetrieveUpdateView(generics.RetrieveUpdateAPIView):  # supports GET, PUT, PATCH
+    queryset = OilType.objects.all()
+    serializer_class = OilTypeSerializer
+
+# Stock Views       
 class StockListCreateView(generics.ListCreateAPIView):
     queryset = Stock.objects.all()
     serializer_class = StockSerializer
@@ -236,6 +240,13 @@ class MonthlyDataView(APIView):
         return Response(combined_data, status=status.HTTP_200_OK)
 
 
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
+from .models import Calibration
+from .serializers import CalibrationSerializer
+
 class CalibrationView(APIView):
     def get(self, request):
         station_id = request.query_params.get("station_id", None)
@@ -253,16 +264,20 @@ class CalibrationView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def put(self, request, pk=None):
-        """ 
-        Updates a specific calibration record.
-        """
         calibration = get_object_or_404(Calibration, pk=pk)
         serializer = CalibrationSerializer(calibration, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk=None):
+        calibration = get_object_or_404(Calibration, pk=pk)
+        calibration.delete()
+        return Response({"message": "Calibration deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
     
 class CustomerDetailView(generics.RetrieveAPIView):
     """
@@ -331,32 +346,35 @@ def send_email_view(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
-
-@csrf_exempt 
+@csrf_exempt
 def send_email_Password_view(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
             recipient_email = data.get("email")
-            recipient_password = data.get("password") 
+            recipient_password = data.get("password")
+            customer_id = data.get("customer_id")  # 🆕 Capture customer ID
 
             if not recipient_email:
                 return JsonResponse({"error": "Recipient email is required"}, status=400)
 
-            subject = "From SOLSE OIL"
+            subject = "Your SOLSE OIL Account Info"
             message = f"""
             Hello Customer,
 
-            Here is  your account From SOLSE OIL and your account will be automatically created with
-             
-            Password :  {recipient_password}
-            Email : {recipient_email}
+            Your account at SOLSE OIL has been successfully created.
 
-            For more information, please call us at +25078987897.
+            Email       : {recipient_email}
+            Password    : {recipient_password}
+            Customer Code : {customer_id}
+
+            Please keep this information safe.
+
+            For help, call us at +25078987897.
             """
-            from_email = settings.EMAIL_HOST_USER
 
-            send_mail(subject, message, from_email, [recipient_email])  # Send email
+            from_email = settings.EMAIL_HOST_USER
+            send_mail(subject, message, from_email, [recipient_email])
 
             return JsonResponse({"message": f"Email sent to {recipient_email} successfully!"})
 
@@ -364,6 +382,7 @@ def send_email_Password_view(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
 
 
 # List and Create Customer Responses
