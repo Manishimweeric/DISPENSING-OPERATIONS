@@ -340,12 +340,16 @@ def send_email_view(request):
 
             send_mail(subject, message, from_email, [recipient_email])  # Send email
 
+
+
+
             return JsonResponse({"message": f"Email sent to {recipient_email} successfully!"})
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
 @csrf_exempt
 def send_email_Password_view(request):
     if request.method == "POST":
